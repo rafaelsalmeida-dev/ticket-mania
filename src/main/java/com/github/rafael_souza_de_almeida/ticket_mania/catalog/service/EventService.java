@@ -5,12 +5,12 @@ import com.github.rafael_souza_de_almeida.ticket_mania.catalog.dto.EventRequestD
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.dto.EventResponseDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.repository.EventRepository;
 import com.github.rafael_souza_de_almeida.ticket_mania.mapper.EventMapper;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.EventNotFoundException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedModel;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.UUID;
 
 @Service
 public class EventService{
@@ -23,11 +23,19 @@ public class EventService{
         this.mapper = mapper;
     }
 
-    public List<EventResponseDto> findAll () {
+    public Page<EventResponseDto> findAll (Pageable pageable) {
 
-        var events = eventRepository.findAll();
+        var events = eventRepository.findAll(pageable);
 
-        return mapper.toResponseDtoList(events);
+        return events.map(mapper::toResponseDto);
+
+    }
+
+    public Page<EventResponseDto> findByName(String name, Pageable pageable) {
+
+        Page<Event> events = eventRepository.findByNameContainingIgnoreCase(name, pageable);
+
+        return events.map(mapper::toResponseDto);
 
     }
 
@@ -43,6 +51,29 @@ public class EventService{
         eventRepository.save(event);
 
         return mapper.toResponseDto(event);
+
+    }
+
+    public EventResponseDto update(EventRequestDto dto, UUID id) {
+
+        Event event = eventRepository.findById(id).orElseThrow(() -> new EventNotFoundException("Event not found"));
+
+        event.setName(dto.getName());
+        event.setPlace(dto.getPlace());
+        event.setDate(dto.getDate());
+        event.setCapacity(dto.getCapacity());
+
+        Event updatedEvent = eventRepository.save(event);
+
+        return mapper.toResponseDto(updatedEvent);
+
+    }
+
+    public void delete(UUID id) {
+
+        Event event = eventRepository.findById(id).orElseThrow(() -> new EventNotFoundException("Event not found"));
+
+        eventRepository.delete(event);
 
     }
 
