@@ -6,7 +6,6 @@ import com.github.rafael_souza_de_almeida.ticket_mania.catalog.service.EventServ
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchRequestDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.service.TicketService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,11 +15,15 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/events")
-@RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
     private final TicketService ticketService;
+
+    public EventController(EventService eventService, TicketService ticketService) {
+        this.eventService = eventService;
+        this.ticketService = ticketService;
+    }
 
     @GetMapping
     public ResponseEntity<List<EventResponseDto>> findAll() {

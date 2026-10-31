@@ -8,8 +8,6 @@ import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.Ticket
 import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.OrderNotFoundException;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.OrderRepository;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
-
-import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class OrderPaymentService {
 
     private final OrderRepository orderRepository;
     private final TicketRepository ticketRepository;
     private final RabbitTemplate rabbitTemplate;
+
+    public OrderPaymentService(OrderRepository orderRepository, TicketRepository ticketRepository, RabbitTemplate rabbitTemplate) {
+        this.orderRepository = orderRepository;
+        this.ticketRepository = ticketRepository;
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     @Transactional
     public void fulfillOrder(UUID orderId) {

@@ -6,7 +6,6 @@ import com.github.rafael_souza_de_almeida.ticket_mania.user.dto.RegisterDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.user.service.AuthService;
 import com.github.rafael_souza_de_almeida.ticket_mania.user.service.UserService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,11 +15,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/v1/auth")
-@RequiredArgsConstructor
 public class AuthenticationController {
 
     private final UserService userService;
     private final AuthService authService;
+
+    public AuthenticationController(UserService userService, AuthService authService) {
+        this.userService = userService;
+        this.authService = authService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody @Valid AuthenticationDto data) {

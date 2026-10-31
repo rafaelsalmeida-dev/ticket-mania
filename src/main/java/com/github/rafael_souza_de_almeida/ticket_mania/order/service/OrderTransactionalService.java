@@ -10,19 +10,23 @@ import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.TicketUna
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.OrderRepository;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
 import com.stripe.exception.StripeException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class OrderTransactionalService {
 
     private final OrderRepository orderRepository;
     private final TicketRepository ticketRepository;
     private final PaymentService paymentService;
+
+    public OrderTransactionalService(OrderRepository orderRepository, TicketRepository ticketRepository, PaymentService paymentService) {
+        this.orderRepository = orderRepository;
+        this.ticketRepository = ticketRepository;
+        this.paymentService = paymentService;
+    }
 
     @Transactional
     public OrderResponseDto createWithTransaction(OrderRequestDto dto, UUID userId) {
@@ -35,11 +39,11 @@ public class OrderTransactionalService {
         ticketRepository.save(ticket);
 
 
-        Order order = Order.builder()
-                .ticket(ticket)
-                .userId(userId)
-                .status(OrderStatus.PENDING)
-                .build();
+        Order order = new Order();
+
+        order.setTicket(ticket);
+        order.setUserId(userId);
+        order.setStatus(OrderStatus.PENDING);
 
         Order savedOrder = orderRepository.save(order);
 

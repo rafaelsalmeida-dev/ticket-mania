@@ -6,8 +6,8 @@ import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.OrderS
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.OrderRepository;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +16,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class OrderExpirationJob {
 
     private final OrderRepository orderRepository;
     private final TicketRepository ticketRepository;
+
+    public OrderExpirationJob(OrderRepository orderRepository, TicketRepository ticketRepository) {
+        this.orderRepository = orderRepository;
+        this.ticketRepository = ticketRepository;
+    }
+
+    Logger log = LoggerFactory.getLogger(OrderExpirationJob.class);
 
     @Scheduled(fixedRate = 60000)
     @Transactional

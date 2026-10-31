@@ -7,19 +7,23 @@ import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class PaymentWebhookService {
 
     private final OrderRepository orderRepository;
+
+    public PaymentWebhookService(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
+
+    Logger log = LoggerFactory.getLogger(PaymentWebhookService.class);
 
     @Value("${stripe.secret.webhook}")
     private String webhookSecret;

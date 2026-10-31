@@ -4,9 +4,7 @@ package com.github.rafael_souza_de_almeida.ticket_mania.order.service;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderRequestDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderResponseDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.TicketUnavailableException;
-
 import com.github.rafael_souza_de_almeida.ticket_mania.user.domain.User;
-import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -16,11 +14,15 @@ import org.springframework.stereotype.Service;
 import java.util.concurrent.TimeUnit;
 
 @Service
-@RequiredArgsConstructor
 public class OrderService {
 
     private final RedissonClient redissonClient;
     private final OrderTransactionalService orderTransactionalService;
+
+    public OrderService(RedissonClient redissonClient, OrderTransactionalService orderTransactionalService) {
+        this.redissonClient = redissonClient;
+        this.orderTransactionalService = orderTransactionalService;
+    }
 
     public OrderResponseDto create(OrderRequestDto dto) {
 

@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 
 public record TicketBatchRequestDto(
         @NotNull int quantity,
-        @NotNull String sectorCode,
         @NotNull TicketType type,
         @NotNull BigDecimal price
 ) {
