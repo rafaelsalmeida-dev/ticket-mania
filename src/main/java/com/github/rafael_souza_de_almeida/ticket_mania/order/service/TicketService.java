@@ -1,21 +1,22 @@
 package com.github.rafael_souza_de_almeida.ticket_mania.order.service;
 
-import com.github.rafael_souza_de_almeida.ticket_mania.catalog.domain.Event;
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.repository.EventRepository;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Ticket;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketType;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchRequestDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchResponseDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateRequestDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateResponseDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.EventNotFoundException;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class TicketService {
+
     private final TicketRepository ticketRepository;
     private final EventRepository eventRepository;
 
@@ -25,26 +26,52 @@ public class TicketService {
     }
 
     @Transactional
-    public void generateTicketsForEvent(UUID eventId, TicketBatchRequestDto dto) {
+    public TicketBatchResponseDto generateTicketsForEvent(UUID eventId, TicketBatchRequestDto dto) {
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EventNotFoundException("Event not found"));
-
-        List<Ticket> ticketsToSave = new ArrayList<>();
-
-        for (int i = 1; i <= dto.quantity(); i++) {
-
-            Ticket ticket = new Ticket();
-
-            ticket.setEvent(event);
-            ticket.setStatus(TicketStatus.AVAILABLE);
-            ticket.setPrice(dto.price());
-            ticket.setType(dto.type());
-
-
-            ticketsToSave.add(ticket);
+        if (!eventRepository.existsById(eventId)) {
+            throw new EventNotFoundException("Event not found");
         }
 
-        ticketRepository.saveAll(ticketsToSave);
+        ticketRepository.generateBatch(
+                eventId,
+                dto.price(),
+                dto.type().name(),
+                dto.quantity());
+
+        long total = ticketRepository.countByEventIdAndTicketTypeAndStatus(
+                eventId, dto.type(), TicketStatus.AVAILABLE);
+
+        return new TicketBatchResponseDto(dto.quantity(), total);
+    }
+
+    @Transactional
+    public TicketUpdateResponseDto updatePrice(UUID eventId, TicketType type, TicketUpdateRequestDto dto) {
+        checkEventExists(eventId);
+
+        int updated = ticketRepository.updatePriceOfAvailable(eventId, type.name(), dto.price());
+
+        return new TicketUpdateResponseDto(updated, countAvailable(eventId, type));
+    }
+
+
+    @Transactional
+    public TicketUpdateResponseDto deleteAvailable(UUID eventId, TicketType type, Integer quantity) {
+        checkEventExists(eventId);
+
+        int limit = (quantity == null) ? Integer.MAX_VALUE : quantity;
+        int deleted = ticketRepository.deleteAvailable(eventId, type.name(), limit);
+
+        return new TicketUpdateResponseDto(deleted, countAvailable(eventId, type));
+    }
+
+    private void checkEventExists(UUID eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new EventNotFoundException("Event not found");
+        }
+    }
+
+    private long countAvailable(UUID eventId, TicketType type) {
+        return ticketRepository.countByEventIdAndTicketTypeAndStatus(eventId, type, TicketStatus.AVAILABLE);
     }
 }
+

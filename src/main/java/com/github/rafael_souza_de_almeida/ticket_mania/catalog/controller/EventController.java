@@ -3,15 +3,21 @@ package com.github.rafael_souza_de_almeida.ticket_mania.catalog.controller;
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.dto.EventRequestDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.dto.EventResponseDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.service.EventService;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketType;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchRequestDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchResponseDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateRequestDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateResponseDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.service.TicketService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -84,13 +90,25 @@ public class EventController {
 
     }
 
-    @PostMapping("/{id}/tickets")
-    public ResponseEntity<Void> add_tickets(@PathVariable UUID id, @RequestBody TicketBatchRequestDto dto) {
+    @PostMapping("/events/{eventId}/tickets")
+    public ResponseEntity<TicketBatchResponseDto> generate(@PathVariable UUID eventId,
+                                                           @RequestBody @Valid TicketBatchRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ticketService.generateTicketsForEvent(eventId, dto));
+    }
 
-        ticketService.generateTicketsForEvent(id, dto);
+    @PutMapping("/events/{eventId}/tickets/{type}")
+    public TicketUpdateResponseDto updateTicketPrice(@PathVariable UUID eventId,
+                                               @PathVariable TicketType type,
+                                               @RequestBody @Valid TicketUpdateRequestDto dto) {
+        return ticketService.updatePrice(eventId, type, dto);
+    }
 
-        return ResponseEntity.status(HttpStatus.OK).build();
-
+    @DeleteMapping("/events/{eventId}/tickets/{type}")
+    public TicketUpdateResponseDto deleteTickets(@PathVariable UUID eventId,
+                                          @PathVariable TicketType type,
+                                          @RequestParam(required = false) @Min(1) Integer quantity) {
+        return ticketService.deleteAvailable(eventId, type, quantity);
     }
 
 

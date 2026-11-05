@@ -4,7 +4,10 @@ import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.OrderS
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -19,9 +22,11 @@ public class Order {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id", nullable = false)
-    private Ticket ticket;
+    @OneToMany(mappedBy = "order")
+    private List<Ticket> tickets = new ArrayList<>();
+
+    @Column(name = "total_amount", nullable = false)
+    private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -31,15 +36,18 @@ public class Order {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public Order(UUID id, UUID userId, Ticket ticket, OrderStatus status, LocalDateTime createdAt) {
-        this.id = id;
-        this.userId = userId;
-        this.ticket = ticket;
-        this.status = status;
-        this.createdAt = createdAt;
-    }
+    @Column(name = "payment_provider", length = 30)
+    private String paymentProvider;
+
+    @Column(name = "payment_reference", length = 100)
+    private String paymentReference;
 
     public Order() {
+    }
+
+    public void addTicket(Ticket ticket) {
+        tickets.add(ticket);
+        ticket.setOrder(this);
     }
 
     public UUID getId() {
@@ -58,12 +66,20 @@ public class Order {
         this.userId = userId;
     }
 
-    public Ticket getTicket() {
-        return ticket;
+    public List<Ticket> getTickets() {
+        return tickets;
     }
 
-    public void setTicket(Ticket ticket) {
-        this.ticket = ticket;
+    public void setTickets(List<Ticket> tickets) {
+        this.tickets = tickets;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public OrderStatus getStatus() {
@@ -82,15 +98,31 @@ public class Order {
         this.createdAt = createdAt;
     }
 
+    public String getPaymentProvider() {
+        return paymentProvider;
+    }
+
+    public void setPaymentProvider(String paymentProvider) {
+        this.paymentProvider = paymentProvider;
+    }
+
+    public String getPaymentReference() {
+        return paymentReference;
+    }
+
+    public void setPaymentReference(String paymentReference) {
+        this.paymentReference = paymentReference;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Order order)) return false;
-        return Objects.equals(getId(), order.getId()) && Objects.equals(getUserId(), order.getUserId()) && Objects.equals(getTicket(), order.getTicket()) && getStatus() == order.getStatus() && Objects.equals(getCreatedAt(), order.getCreatedAt());
+        return Objects.equals(getId(), order.getId()) && Objects.equals(getUserId(), order.getUserId()) && Objects.equals(getTickets(), order.getTickets()) && Objects.equals(getTotalAmount(), order.getTotalAmount()) && getStatus() == order.getStatus() && Objects.equals(getCreatedAt(), order.getCreatedAt());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUserId(), getTicket(), getStatus(), getCreatedAt());
+        return Objects.hash(getId(), getUserId(), getTickets(), getTotalAmount(), getStatus(), getCreatedAt());
     }
 }

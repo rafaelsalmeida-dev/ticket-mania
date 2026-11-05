@@ -1,58 +1,70 @@
 package com.github.rafael_souza_de_almeida.ticket_mania.order.service;
 
 
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Order;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Ticket;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.OrderStatus;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderRequestDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderResponseDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.TicketUnavailableException;
-import com.github.rafael_souza_de_almeida.ticket_mania.user.domain.User;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.OrderRepository;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
+import com.github.rafael_souza_de_almeida.ticket_mania.payment.dto.PaymentInit;
+import com.github.rafael_souza_de_almeida.ticket_mania.payment.gateway.PaymentGateway;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.concurrent.TimeUnit;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderService {
 
-    private final RedissonClient redissonClient;
-    private final OrderTransactionalService orderTransactionalService;
+    private final OrderRepository orderRepository;
+    private final TicketRepository ticketRepository;
+    private final PaymentGateway paymentGateway;
 
-    public OrderService(RedissonClient redissonClient, OrderTransactionalService orderTransactionalService) {
-        this.redissonClient = redissonClient;
-        this.orderTransactionalService = orderTransactionalService;
+    public OrderService(OrderRepository orderRepository, TicketRepository ticketRepository, PaymentGateway paymentGateway) {
+        this.orderRepository = orderRepository;
+        this.ticketRepository = ticketRepository;
+        this.paymentGateway = paymentGateway;
     }
 
-    public OrderResponseDto create(OrderRequestDto dto) {
+    @Transactional
+    public OrderResponseDto create(OrderRequestDto dto, UUID userId) {
 
-        var auth = SecurityContextHolder.getContext().getAuthentication();
+        List<Ticket> tickets = ticketRepository.findAvailable(dto.eventId(),
+                dto.ticketType().toString(),
+                dto.quantity());
 
-        if (auth == null || !(auth.getPrincipal() instanceof User loggedUser)) {
-            throw new InsufficientAuthenticationException("User is not authenticated or session is invalid.");
+        if(tickets.size() < dto.quantity()) {
+            throw new TicketUnavailableException("Not enough tickets available");
         }
 
-        String lockKey = "lock:ticket:" + dto.ticketId();
-        RLock lock = redissonClient.getLock(lockKey);
+        BigDecimal total = tickets.stream().map(Ticket::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        try {
-            boolean isLocked = lock.tryLock(1, 10, TimeUnit.SECONDS);
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setStatus(OrderStatus.PENDING);
+        order.setTotalAmount(total);
+        Order saved = orderRepository.save(order);
 
-            if (!isLocked) {
-                throw new TicketUnavailableException("High traffic volume. This ticket is currently being processed by another user.");
-            }
+        tickets.forEach(t -> {
+            t.setStatus(TicketStatus.RESERVED);
+            saved.addTicket(t);
+        });
 
-            return orderTransactionalService.createWithTransaction(dto, loggedUser.getId());
+        PaymentInit payment = paymentGateway.start(saved);
+        saved.setPaymentProvider(payment.provider());
+        saved.setPaymentReference(payment.reference());
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Thread interrupted while waiting for lock", e);
+        return new OrderResponseDto(saved.getId(), tickets.stream().map(Ticket::getId).toList(),
+                total,
+                payment);
 
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
     }
 
 

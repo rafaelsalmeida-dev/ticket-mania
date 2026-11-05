@@ -6,57 +6,59 @@ import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.OrderS
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.OrderRepository;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
+import com.github.rafael_souza_de_almeida.ticket_mania.payment.gateway.PaymentGateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderExpirationJob {
 
-    private final OrderRepository orderRepository;
-    private final TicketRepository ticketRepository;
+    private static final Logger log = LoggerFactory.getLogger(OrderExpirationJob.class);
+    private static final int BATCH_SIZE = 100;
 
-    public OrderExpirationJob(OrderRepository orderRepository, TicketRepository ticketRepository) {
+    private final OrderRepository orderRepository;
+    private final PaymentGateway paymentGateway;
+
+    public OrderExpirationJob(OrderRepository orderRepository, PaymentGateway paymentGateway) {
         this.orderRepository = orderRepository;
-        this.ticketRepository = ticketRepository;
+        this.paymentGateway = paymentGateway;
     }
 
-    Logger log = LoggerFactory.getLogger(OrderExpirationJob.class);
-
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60_000)
     @Transactional
     public void cancelExpiredOrders() {
 
-        LocalDateTime expiredThreshold = LocalDateTime.now().minusMinutes(15);
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(15);
 
-        List<Order> expiredOrders = orderRepository.findByStatusAndCreatedAtBefore(OrderStatus.PENDING, expiredThreshold);
+        List<Order> expired = orderRepository.findExpiredForUpdate(
+                OrderStatus.PENDING, threshold, PageRequest.of(0, BATCH_SIZE));
 
-        if(expiredOrders.isEmpty()) {
+        if (expired.isEmpty()) {
             return;
         }
 
-        log.info("Found {} expired orders. Starting cancellation process...", expiredOrders.size());
+        for (Order order : expired) {
+            paymentGateway.cancel(order);
+            order.setStatus(OrderStatus.EXPIRED);
 
-        for(Order order : expiredOrders) {
+            List<UUID> ticketIds = new ArrayList<>();
+            order.getTickets().forEach(t -> {
+                t.setStatus(TicketStatus.AVAILABLE);
+                t.setOrder(null);
+                ticketIds.add(t.getId());
+            });
+            order.getTickets().clear();
 
-            order.setStatus(OrderStatus.CANCELLED);
-
-            Ticket ticket = order.getTicket();
-
-            ticket.setStatus(TicketStatus.AVAILABLE);
-
-            ticketRepository.save(ticket);
-            orderRepository.save(order);
-
-            log.info("Order {} cancelled. Ticket {} is AVAILABLE again.", order.getId(), ticket.getId());
-
+            log.info("Order {} expired. Tickets {} are AVAILABLE again.", order.getId(), ticketIds);
         }
-
     }
-
 }

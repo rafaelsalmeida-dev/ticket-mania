@@ -22,6 +22,10 @@ public class Ticket {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
+
     @Column(nullable = false)
     private BigDecimal price;
 
@@ -32,15 +36,7 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TicketStatus status;
-
-    public Ticket(UUID id, Event event, BigDecimal price, TicketType type, TicketStatus status) {
-        this.id = id;
-        this.event = event;
-        this.price = price;
-        this.type = type;
-        this.status = status;
-    }
-
+    
     public Ticket() {
     }
 
@@ -58,6 +54,14 @@ public class Ticket {
 
     public void setEvent(Event event) {
         this.event = event;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
     public BigDecimal getPrice() {
@@ -86,14 +90,13 @@ public class Ticket {
 
     @Override
     public boolean equals(Object o) {
-
         if (this == o) return true;
         if (!(o instanceof Ticket ticket)) return false;
-        return Objects.equals(getId(), ticket.getId()) && Objects.equals(getEvent(), ticket.getEvent()) && Objects.equals(getPrice(), ticket.getPrice()) && getType() == ticket.getType() && getStatus() == ticket.getStatus();
+        return Objects.equals(getId(), ticket.getId()) && Objects.equals(getEvent(), ticket.getEvent()) && Objects.equals(getOrder(), ticket.getOrder()) && Objects.equals(getPrice(), ticket.getPrice()) && getType() == ticket.getType() && getStatus() == ticket.getStatus();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getEvent(), getPrice(), getType(), getStatus());
+        return Objects.hash(getId(), getEvent(), getOrder(), getPrice(), getType(), getStatus());
     }
 }

@@ -1,0 +1,16 @@
+INSERT INTO tb_events (id, name, "date", place, capacity) VALUES
+('b3b647f1-7975-4d0f-8c7c-0a2d5e2a2c6d', 'Rock in Rio', '2027-09-15 14:00:00', 'Cidade do Rock - RJ', 100000),
+('f40c741e-399a-4c28-98e3-05b1c7eb16a5', 'Lollapalooza Brasil', '2027-03-24 12:00:00', 'Autódromo de Interlagos - SP', 80000),
+('d27b9c64-46ab-48d6-95a2-3b24f5a34e07', 'Comic Con Experience (CCXP)', '2027-12-02 10:00:00', 'São Paulo Expo - SP', 120000),
+('e9812a67-d817-48f5-b73a-44c1d76378f4', 'Brasil Game Show (BGS)', '2027-10-09 13:00:00', 'Expo Center Norte - SP', 35000),
+('70701026-6a52-474c-8f92-5d9c79f42841', 'Web Summit Rio', '2027-04-15 09:00:00', 'Riocentro - RJ', 30000),
+('c8e54730-a8d2-45cf-81b0-2b1d3d63e9f2', 'Festival João Rock', '2027-06-05 15:00:00', 'Parque Permanente de Exposições - SP', 60000),
+('a2491b4b-3cc3-4b68-8d2b-10f545dc65e9', 'Campus Party Brasil', '2027-07-20 10:00:00', 'Parque Anhembi - SP', 15000),
+('6e284f18-1b2c-497d-b541-61b69dfc2d11', 'Bienal do Livro Rio', '2027-09-01 09:00:00', 'Riocentro - RJ', 50000),
+('4fa815ca-22e6-42bc-9d0a-9d9365c69785', 'Tomorrowland Brasil', '2027-10-12 14:00:00', 'Parque Maeda - SP', 40000),
+('8b394145-12cf-4b6c-8438-23c31e9c9ab9', 'Oktoberfest Blumenau', '2027-10-10 18:00:00', 'Parque Vila Germânica - SC', 45000),
+('5c33842c-29a5-4811-9a74-bc4839f972b2', 'Fórmula 1 GP São Paulo', '2027-11-05 14:00:00', 'Autódromo de Interlagos - SP', 70000),
+('d4f87e5b-3b3b-410a-8a5f-7e9b0c5d6c8b', 'Planeta Atlântida', '2027-02-05 16:00:00', 'Saba Praia de Atlântida - RS', 45000),
+('1b9c25f4-7e82-4f8a-9233-14c6d328c7f0', 'Festival de Inverno de Campos do Jordão', '2027-07-01 19:00:00', 'Auditório Cláudio Santoro - SP', 2000),
+('2c8b7f5d-6a1e-452f-870b-93e14d69352e', 'Universo Spanta', '2027-01-15 20:00:00', 'Marina da Glória - RJ', 10000),
+('9e4f5a3b-2d7c-4861-a472-8f9215b3c5a6', 'Tardezinha', '2027-12-15 15:00:00', 'Maracanã - RJ', 65000);
