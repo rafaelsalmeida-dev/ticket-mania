@@ -31,7 +31,7 @@ public class Ticket {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ticket_type", nullable = false)
-    private TicketType type;
+    private TicketType ticketType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -72,12 +72,12 @@ public class Ticket {
         this.price = price;
     }
 
-    public TicketType getType() {
-        return type;
+    public TicketType getTicketType() {
+        return ticketType;
     }
 
-    public void setType(TicketType type) {
-        this.type = type;
+    public void setTicketType(TicketType ticketType) {
+        this.ticketType = ticketType;
     }
 
     public TicketStatus getStatus() {
@@ -92,11 +92,11 @@ public class Ticket {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Ticket ticket)) return false;
-        return Objects.equals(getId(), ticket.getId()) && Objects.equals(getEvent(), ticket.getEvent()) && Objects.equals(getOrder(), ticket.getOrder()) && Objects.equals(getPrice(), ticket.getPrice()) && getType() == ticket.getType() && getStatus() == ticket.getStatus();
+        return Objects.equals(getId(), ticket.getId()) && Objects.equals(getEvent(), ticket.getEvent()) && Objects.equals(getOrder(), ticket.getOrder()) && Objects.equals(getPrice(), ticket.getPrice()) && getTicketType() == ticket.getTicketType() && getStatus() == ticket.getStatus();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getEvent(), getOrder(), getPrice(), getType(), getStatus());
+        return Objects.hash(getId(), getEvent(), getOrder(), getPrice(), getTicketType(), getStatus());
     }
 }

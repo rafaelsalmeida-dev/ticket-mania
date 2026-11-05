@@ -90,21 +90,21 @@ public class EventController {
 
     }
 
-    @PostMapping("/events/{eventId}/tickets")
+    @PostMapping("/{eventId}/tickets")
     public ResponseEntity<TicketBatchResponseDto> generate(@PathVariable UUID eventId,
                                                            @RequestBody @Valid TicketBatchRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketService.generateTicketsForEvent(eventId, dto));
     }
 
-    @PutMapping("/events/{eventId}/tickets/{type}")
+    @PutMapping("/{eventId}/tickets/{type}")
     public TicketUpdateResponseDto updateTicketPrice(@PathVariable UUID eventId,
                                                @PathVariable TicketType type,
                                                @RequestBody @Valid TicketUpdateRequestDto dto) {
         return ticketService.updatePrice(eventId, type, dto);
     }
 
-    @DeleteMapping("/events/{eventId}/tickets/{type}")
+    @DeleteMapping("/{eventId}/tickets/{type}")
     public TicketUpdateResponseDto deleteTickets(@PathVariable UUID eventId,
                                           @PathVariable TicketType type,
                                           @RequestParam(required = false) @Min(1) Integer quantity) {

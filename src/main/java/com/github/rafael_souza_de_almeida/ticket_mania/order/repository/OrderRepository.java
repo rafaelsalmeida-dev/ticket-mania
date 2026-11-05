@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -29,4 +30,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findExpiredForUpdate(@Param("status") OrderStatus status,
                                      @Param("threshold") LocalDateTime threshold,
                                      Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM Order o WHERE o.id = :id")
+    Optional<Order> findByIdForUpdate(@Param("id") UUID id);
 }
