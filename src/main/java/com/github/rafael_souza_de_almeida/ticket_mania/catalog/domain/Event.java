@@ -14,24 +14,28 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String name;
 
     @Column(nullable = false)
     private LocalDateTime date;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String place;
 
     @Column(nullable = false)
     private Integer capacity;
 
-    public Event(UUID id, String name, LocalDateTime date, String place, Integer capacity) {
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    public Event(UUID id, String name, LocalDateTime date, String place, Integer capacity, String imageUrl) {
         this.id = id;
         this.name = name;
         this.date = date;
         this.place = place;
         this.capacity = capacity;
+        this.imageUrl = imageUrl;
     }
 
     public Event() {
@@ -77,15 +81,23 @@ public class Event {
         this.capacity = capacity;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Event event)) return false;
-        return Objects.equals(getId(), event.getId()) && Objects.equals(getName(), event.getName()) && Objects.equals(getDate(), event.getDate()) && Objects.equals(getPlace(), event.getPlace()) && Objects.equals(getCapacity(), event.getCapacity());
+        return Objects.equals(getId(), event.getId()) && Objects.equals(getName(), event.getName()) && Objects.equals(getDate(), event.getDate()) && Objects.equals(getPlace(), event.getPlace()) && Objects.equals(getCapacity(), event.getCapacity()) && Objects.equals(getImageUrl(), event.getImageUrl());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getDate(), getPlace(), getCapacity());
+        return Objects.hash(getId(), getName(), getDate(), getPlace(), getCapacity(), getImageUrl());
     }
 }

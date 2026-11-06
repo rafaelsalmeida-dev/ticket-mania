@@ -2,8 +2,10 @@ package com.github.rafael_souza_de_almeida.ticket_mania.order.repository;
 
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Order;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.OrderStatus;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderSummaryDto;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -34,4 +36,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Order o WHERE o.id = :id")
     Optional<Order> findByIdForUpdate(@Param("id") UUID id);
+
+    Page<Order> findByUserId(UUID userId, Pageable pageable);
+
+    Optional<Order> findByIdAndUserId(UUID id, UUID userId);
+
 }

@@ -30,7 +30,7 @@ class AuthorizationServiceTest {
     @Test
     @DisplayName("loadUserByUsername - should return the user when the email exists")
     void shouldReturnUserWhenEmailExists() {
-        User user = User.builder().id(UUID.randomUUID()).email("rafael@test.com").role(Role.ROLE_USER).build();
+        User user = new User(UUID.randomUUID(), "Rafael Almeida", "rafael@test.com", "encodedPassword", Role.ROLE_USER);
 
         when(userRepository.findByEmail("rafael@test.com")).thenReturn(user);
 

@@ -4,27 +4,27 @@ import com.github.rafael_souza_de_almeida.ticket_mania.core.rabbitMq.RabbitMQCon
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Order;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Ticket;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.OrderStatus;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.OrderNotFoundException;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.OrderRepository;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.Optional;
 import java.util.UUID;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,66 +37,68 @@ class OrderPaymentServiceTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
 
-    @Mock
-    private TicketRepository ticketRepository;
-
     @InjectMocks
     private OrderPaymentService orderPaymentService;
 
-    private UUID orderId;
-    private UUID ticketId;
-    private Order order;
-    private Ticket ticket;
-
-    @BeforeEach
-    void setUp() {
-        ticketId = UUID.randomUUID();
-        orderId = UUID.randomUUID();
-        order = Order.builder()
-                .id(orderId)
-                .userId(UUID.randomUUID())
-                .status(OrderStatus.PENDING)
-                .ticket(Ticket.builder()
-                        .id(ticketId)
-                        .build())
-                .build();
+    @AfterEach
+    void clearTransactionSynchronization() {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     @Test
-    @DisplayName("fulfillOrder - should mark the order as COMPLETED and publish the fulfillment event")
-    void shouldFulfillPendingOrder() {
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(order.getTicket()));
+    void fulfillOrderMarksTicketsSoldAndPublishesOnlyAfterCommit() {
+        UUID orderId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Order order = pendingOrder(orderId, userId);
+        Ticket ticket = new Ticket();
+        ticket.setStatus(TicketStatus.RESERVED);
+        order.addTicket(ticket);
+        when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
+        TransactionSynchronizationManager.initSynchronization();
 
-        orderPaymentService.fulfillOrder(orderId);
+        orderPaymentService.fulfillOrder(orderId, userId);
 
-        assertEquals(OrderStatus.COMPLETED, order.getStatus());
-        verify(orderRepository, times(1)).save(order);
-        verify(rabbitTemplate, times(1)).convertAndSend(
-                RabbitMQConfig.EXCHANGE_NAME,
-                RabbitMQConfig.ROUTING_KEY,
-                orderId.toString());
+        assertEquals(OrderStatus.PAID, order.getStatus());
+        assertEquals(TicketStatus.SOLD, ticket.getStatus());
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), anyString());
+
+        for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
+            synchronization.afterCommit();
+        }
+        verify(rabbitTemplate).convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, orderId.toString());
     }
 
     @Test
-    @DisplayName("fulfillOrder - should throw OrderNotFoundException when order does not exist")
-    void shouldThrowWhenOrderNotFound() {
-        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+    void fulfillOrderRejectsAnOrderOwnedByAnotherUser() {
+        UUID orderId = UUID.randomUUID();
+        when(orderRepository.findByIdForUpdate(orderId))
+                .thenReturn(Optional.of(pendingOrder(orderId, UUID.randomUUID())));
 
-        assertThrows(OrderNotFoundException.class, () -> orderPaymentService.fulfillOrder(orderId));
+        assertThrows(AccessDeniedException.class,
+                () -> orderPaymentService.fulfillOrder(orderId, UUID.randomUUID()));
 
         verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), anyString());
     }
 
     @Test
-    @DisplayName("fulfillOrder - should throw IllegalStateException when order is already completed")
-    void shouldThrowWhenOrderAlreadyCompleted() {
-        order.setStatus(OrderStatus.COMPLETED);
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+    void fulfillOrderRejectsUnknownOrder() {
+        UUID orderId = UUID.randomUUID();
+        when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalStateException.class, () -> orderPaymentService.fulfillOrder(orderId));
+        assertThrows(OrderNotFoundException.class,
+                () -> orderPaymentService.fulfillOrder(orderId, UUID.randomUUID()));
 
-        verify(orderRepository, never()).save(order);
         verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), anyString());
+    }
+
+    private Order pendingOrder(UUID orderId, UUID userId) {
+        Order order = new Order();
+        order.setId(orderId);
+        order.setUserId(userId);
+        order.setStatus(OrderStatus.PENDING);
+        return order;
     }
 }

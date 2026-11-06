@@ -23,6 +23,8 @@ public class EventRequestDto {
     @Positive(message = "The capacity must be greater than zero.")
     private Integer capacity;
 
+    private String imageUrl;
+
     public EventRequestDto() {
     }
 
@@ -56,5 +58,13 @@ public class EventRequestDto {
 
     public void setCapacity(@NotNull(message = "Event must have a capacity value.") @Positive(message = "The capacity must be greater than zero.") Integer capacity) {
         this.capacity = capacity;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

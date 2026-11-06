@@ -64,7 +64,7 @@ class UserServiceTest {
     void shouldThrowWhenEmailAlreadyRegistered() {
         RegisterDto dto = new RegisterDto("Rafael Almeida", "rafael@test.com", "plainPassword");
 
-        User existingUser = User.builder().id(UUID.randomUUID()).email(dto.email()).build();
+        User existingUser = new User(UUID.randomUUID(), "Rafael Almeida", dto.email(), "hashed", Role.ROLE_USER);
         when(userRepository.findByEmail(dto.email())).thenReturn(existingUser);
 
         assertThrows(UserAlreadyRegistered.class, () -> userService.registerUser(dto));
@@ -76,7 +76,7 @@ class UserServiceTest {
     @DisplayName("updateUserRole - should update the role of an existing user")
     void shouldUpdateUserRole() {
         UUID userId = UUID.randomUUID();
-        User existingUser = User.builder().id(userId).email("rafael@test.com").role(Role.ROLE_USER).build();
+        User existingUser = new User(userId, "Rafael Almeida", "rafael@test.com", "hashed", Role.ROLE_USER);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 

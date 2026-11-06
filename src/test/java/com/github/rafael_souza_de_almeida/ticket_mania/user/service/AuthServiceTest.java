@@ -41,7 +41,7 @@ class AuthServiceTest {
     void shouldAuthenticateAndReturnToken() {
         AuthenticationDto data = new AuthenticationDto("rafael@test.com", "plainPassword");
 
-        User user = User.builder().id(UUID.randomUUID()).email(data.email()).role(Role.ROLE_USER).build();
+        User user = new User(UUID.randomUUID(), "Rafael Almeida", data.email(), "encodedPassword", Role.ROLE_USER);
         Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))

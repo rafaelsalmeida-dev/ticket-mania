@@ -1,17 +1,22 @@
 package com.github.rafael_souza_de_almeida.ticket_mania.order.service;
 
 
+import com.github.rafael_souza_de_almeida.ticket_mania.mapper.OrderMapper;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Order;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Ticket;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.OrderStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderRequestDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderResponseDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.OrderSummaryDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.OrderNotFoundException;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.TicketUnavailableException;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.OrderRepository;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
 import com.github.rafael_souza_de_almeida.ticket_mania.payment.dto.PaymentInit;
 import com.github.rafael_souza_de_almeida.ticket_mania.payment.gateway.PaymentGateway;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +30,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final TicketRepository ticketRepository;
     private final PaymentGateway paymentGateway;
+    private final OrderMapper orderMapper;
 
-    public OrderService(OrderRepository orderRepository, TicketRepository ticketRepository, PaymentGateway paymentGateway) {
+    public OrderService(OrderRepository orderRepository, TicketRepository ticketRepository, PaymentGateway paymentGateway, OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.ticketRepository = ticketRepository;
         this.paymentGateway = paymentGateway;
+        this.orderMapper = orderMapper;
     }
 
     @Transactional
@@ -66,6 +73,21 @@ public class OrderService {
                 payment);
 
     }
+
+    @Transactional
+    public Page<OrderSummaryDto> findMyOrders(UUID userId, Pageable pageable) {
+        return orderRepository.findByUserId(userId, pageable).map(orderMapper::toSummary);
+    }
+
+    @Transactional
+    public OrderSummaryDto findMyOrder(UUID orderId, UUID userId) {
+
+        return orderRepository.findByIdAndUserId(orderId, userId)
+                .map(orderMapper::toSummary)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found."));
+
+    }
+
 
 
 

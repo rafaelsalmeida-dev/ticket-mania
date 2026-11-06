@@ -47,6 +47,7 @@ public class EventService{
         event.setCapacity(dto.getCapacity());
         event.setDate(dto.getDate());
         event.setPlace(dto.getPlace());
+        event.setImageUrl(dto.getImageUrl());
 
         eventRepository.save(event);
 
@@ -62,6 +63,7 @@ public class EventService{
         event.setPlace(dto.getPlace());
         event.setDate(dto.getDate());
         event.setCapacity(dto.getCapacity());
+        event.setImageUrl(dto.getImageUrl());
 
         Event updatedEvent = eventRepository.save(event);
 

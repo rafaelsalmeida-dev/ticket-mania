@@ -14,6 +14,7 @@ public class EventResponseDto {
     private LocalDateTime date;
     private String place;
     private Integer capacity;
+    private String imageUrl;
 
     public EventResponseDto() {
     }
@@ -56,5 +57,13 @@ public class EventResponseDto {
 
     public void setCapacity(Integer capacity) {
         this.capacity = capacity;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
