@@ -57,7 +57,7 @@ public class EventService{
 
     public EventResponseDto update(EventRequestDto dto, UUID id) {
 
-        Event event = eventRepository.findById(id).orElseThrow(() -> new EventNotFoundException("Event not found"));
+        Event event = findById(id);
 
         event.setName(dto.getName());
         event.setPlace(dto.getPlace());
@@ -73,10 +73,16 @@ public class EventService{
 
     public void delete(UUID id) {
 
-        Event event = eventRepository.findById(id).orElseThrow(() -> new EventNotFoundException("Event not found"));
+        Event event = findById(id);
 
         eventRepository.delete(event);
 
+    }
+
+    private Event findById(UUID id) {
+
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
     }
 
 }

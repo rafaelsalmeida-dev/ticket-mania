@@ -4,10 +4,7 @@ import com.github.rafael_souza_de_almeida.ticket_mania.catalog.dto.EventRequestD
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.dto.EventResponseDto;
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.service.EventService;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketType;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchRequestDto;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchResponseDto;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateRequestDto;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateResponseDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.*;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.service.TicketService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -109,6 +106,11 @@ public class EventController {
                                           @PathVariable TicketType type,
                                           @RequestParam(required = false) @Min(1) Integer quantity) {
         return ticketService.deleteAvailable(eventId, type, quantity);
+    }
+
+    @GetMapping("{eventId}/tickets")
+    public List<TicketResponseDto> availability(@PathVariable UUID eventId) {
+        return ticketService.getAvailabillity(eventId);
     }
 
 

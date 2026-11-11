@@ -1,17 +1,16 @@
 package com.github.rafael_souza_de_almeida.ticket_mania.order.service;
 
 import com.github.rafael_souza_de_almeida.ticket_mania.catalog.repository.EventRepository;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Ticket;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketType;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchRequestDto;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketBatchResponseDto;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateRequestDto;
-import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.TicketUpdateResponseDto;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.dto.*;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.exception.EventNotFoundException;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.TicketRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -62,6 +61,17 @@ public class TicketService {
         int deleted = ticketRepository.deleteAvailable(eventId, type.name(), limit);
 
         return new TicketUpdateResponseDto(deleted, countAvailable(eventId, type));
+    }
+
+    @Transactional
+    public List<TicketResponseDto> getAvailabillity(UUID eventId) {
+
+        checkEventExists(eventId);
+
+        return ticketRepository.findAvailabilityByEvent(eventId)
+                .stream().map(v -> new TicketResponseDto(TicketType.valueOf(v.getTicketType()),
+                v.getPrice(), v.getAvailable())).toList();
+
     }
 
     private void checkEventExists(UUID eventId) {

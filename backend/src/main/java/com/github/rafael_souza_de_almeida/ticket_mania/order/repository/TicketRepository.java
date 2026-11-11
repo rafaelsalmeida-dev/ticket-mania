@@ -3,6 +3,7 @@ package com.github.rafael_souza_de_almeida.ticket_mania.order.repository;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.Ticket;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketStatus;
 import com.github.rafael_souza_de_almeida.ticket_mania.order.domain.enums.TicketType;
+import com.github.rafael_souza_de_almeida.ticket_mania.order.repository.projection.TicketAvailabilityView;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -28,6 +29,17 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     List<Ticket> findAvailable(@Param("eventId") UUID eventId,
                                @Param("ticketType") String ticketType,
                                @Param("quantity") int quantity);
+
+    @Query(value = """
+        SELECT ticket_type              AS ticketType,
+               MIN(price)               AS price,
+               COUNT(*) FILTER (WHERE status = 'AVAILABLE') AS available
+        FROM tb_tickets
+        WHERE event_id = :eventId
+        GROUP BY ticket_type
+        ORDER BY ticket_type
+        """, nativeQuery = true)
+    List<TicketAvailabilityView> findAvailabilityByEvent(@Param("eventId") UUID eventId);
 
     @Modifying
     @Query(value = """

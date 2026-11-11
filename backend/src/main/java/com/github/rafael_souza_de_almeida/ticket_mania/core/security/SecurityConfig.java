@@ -41,10 +41,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/events/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/events/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/events/*/tickets").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/events/*/tickets").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/events/*/tickets/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/events/*/tickets/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/*/role").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/orders/mock-success/*").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/orders/mock-success/*").authenticated()
 
                         .anyRequest().authenticated()
 
