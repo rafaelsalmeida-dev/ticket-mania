@@ -72,6 +72,11 @@ export function Header() {
             <span className="hidden text-xs text-slate-400 sm:inline" role="status">Verificando sessão...</span>
           ) : session ? (
             <>
+              {session.role === "ROLE_ADMIN" ? (
+                <Link className="text-sm font-semibold text-slate-600 hover:text-orange-600" href="/admin/events">
+                  Administração
+                </Link>
+              ) : null}
               <Link className="text-sm font-semibold text-slate-600 hover:text-orange-600" href="/orders">
                 Meus pedidos
               </Link>
