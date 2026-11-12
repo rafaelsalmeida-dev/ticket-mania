@@ -54,48 +54,80 @@ export function EventCatalog() {
             <Sparkles size={14} /> Viva o próximo momento
           </span>
           <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
-            Histórias incríveis começam <span className="text-orange-400">ao vivo.</span>
+            Histórias incríveis começam{" "}
+            <span className="text-orange-400">ao vivo.</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
-            Descubra eventos, escolha seu ingresso e prepare-se para viver algo inesquecível.
+            Descubra eventos, escolha seu ingresso e prepare-se para viver algo
+            inesquecível.
           </p>
-          <form onSubmit={search} className="mt-8 flex max-w-xl flex-col gap-3 rounded-2xl bg-white p-2 sm:flex-row">
-            <label htmlFor="event-search" className="sr-only">Buscar eventos</label>
+          <form
+            onSubmit={search}
+            className="mt-8 flex max-w-xl flex-col gap-3 rounded-2xl bg-white p-2 sm:flex-row"
+          >
+            <label htmlFor="event-search" className="sr-only">
+              Buscar eventos
+            </label>
             <div className="relative flex-1">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
               <Input
                 id="event-search"
                 value={term}
                 onChange={(event) => setTerm(event.target.value)}
                 placeholder="Busque por evento"
-                className="mt-0 border-0 pl-11 shadow-none focus:ring-0"
+                className="w-full rounded-xl border-0 bg-slate-100/80 py-3 pl-12 pr-4 text-sm text-slate-950 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 sm:text-base"
               />
             </div>
-            <Button type="submit" className="rounded-xl px-7">Buscar</Button>
+            <Button type="submit" className="rounded-xl px-7">
+              Buscar
+            </Button>
           </form>
         </div>
       </div>
 
       <div className="mt-12 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-orange-600">Agenda</p>
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-orange-600">
+            Agenda
+          </p>
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">
             {query ? `Resultados para “${query}”` : "Eventos em destaque"}
           </h2>
         </div>
         {result ? (
-          <p className="text-sm text-slate-500">{result.totalElements} eventos encontrados</p>
+          <p className="text-sm text-slate-500">
+            {result.totalElements} eventos encontrados
+          </p>
         ) : null}
       </div>
 
       {loading ? <Loading label="Buscando eventos..." /> : null}
-      {!loading && error ? <div className="mt-6"><Notice>{error}</Notice></div> : null}
+      {!loading && error ? (
+        <div className="mt-6">
+          <Notice>{error}</Notice>
+        </div>
+      ) : null}
       {!loading && !error && result?.content.length === 0 ? (
         <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <h3 className="text-lg font-bold text-slate-900">Nenhum evento encontrado</h3>
-          <p className="mt-2 text-sm text-slate-500">Tente outra busca ou volte para a agenda completa.</p>
+          <h3 className="text-lg font-bold text-slate-900">
+            Nenhum evento encontrado
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Tente outra busca ou volte para a agenda completa.
+          </p>
           {query ? (
-            <Button className="mt-5" variant="outline" onClick={() => { setTerm(""); setQuery(""); setPage(0); }}>
+            <Button
+              className="mt-5"
+              variant="outline"
+              onClick={() => {
+                setTerm("");
+                setQuery("");
+                setPage(0);
+              }}
+            >
               Ver todos os eventos
             </Button>
           ) : null}
@@ -104,15 +136,32 @@ export function EventCatalog() {
       {!loading && !error && result && result.content.length > 0 ? (
         <>
           <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {result.content.map((event) => <EventCard key={event.id} event={event} />)}
+            {result.content.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
           </div>
           {result.totalPages > 1 ? (
-            <nav aria-label="Paginação de eventos" className="mt-9 flex items-center justify-center gap-4">
-              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((value) => value - 1)}>
+            <nav
+              aria-label="Paginação de eventos"
+              className="mt-9 flex items-center justify-center gap-4"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage((value) => value - 1)}
+              >
                 Anterior
               </Button>
-              <span className="text-sm text-slate-600">Página {page + 1} de {result.totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page + 1 >= result.totalPages} onClick={() => setPage((value) => value + 1)}>
+              <span className="text-sm text-slate-600">
+                Página {page + 1} de {result.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page + 1 >= result.totalPages}
+                onClick={() => setPage((value) => value + 1)}
+              >
                 Próxima
               </Button>
             </nav>

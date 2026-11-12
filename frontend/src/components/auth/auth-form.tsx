@@ -19,7 +19,7 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "Informe seu nome."),
-  email: z.string().email("Informe um e-mail válido."),
+  email: z.email("Informe um e-mail válido."),
   password: z.string().min(1, "Informe uma senha."),
 });
 
@@ -32,8 +32,10 @@ async function responseMessage(response: Response) {
     typeof body === "object" &&
     body !== null &&
     "message" in body &&
-    typeof body.message === "string"
-  ) return body.message;
+    typeof body.message === "string" &&
+    response.status !== 401
+  )
+    return body.message;
   return response.status === 401
     ? "E-mail ou senha inválidos."
     : `Não foi possível concluir a solicitação (${response.status}).`;
@@ -41,7 +43,9 @@ async function responseMessage(response: Response) {
 
 function safeNextPath(): string {
   const requested = new URLSearchParams(window.location.search).get("next");
-  return requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/";
+  return requested?.startsWith("/") && !requested.startsWith("//")
+    ? requested
+    : "/";
 }
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -58,7 +62,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
-  const busy = isLogin ? loginForm.formState.isSubmitting : registerForm.formState.isSubmitting;
+  const busy = isLogin
+    ? loginForm.formState.isSubmitting
+    : registerForm.formState.isSubmitting;
 
   async function submit(values: LoginValues | RegisterValues) {
     setError("");
@@ -75,6 +81,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         return;
       }
       if (isLogin) {
+        window.dispatchEvent(new Event("auth:changed"));
         router.replace(safeNextPath());
         router.refresh();
       } else {
@@ -91,67 +98,151 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 md:grid-cols-[0.9fr_1.1fr]">
         <div className="relative hidden min-h-[34rem] flex-col justify-between overflow-hidden bg-slate-950 p-10 text-white md:flex">
           <div className="pointer-events-none absolute -right-20 top-10 size-72 rounded-full bg-orange-500/30 blur-3xl" />
-          <Link href="/" className="relative inline-flex items-center gap-3 text-lg font-extrabold">
-            <span className="grid size-10 place-items-center rounded-2xl bg-orange-500"><Ticket size={21} /></span>
+          <Link
+            href="/"
+            className="relative inline-flex items-center gap-3 text-lg font-extrabold"
+          >
+            <span className="grid size-10 place-items-center rounded-2xl bg-orange-500">
+              <Ticket size={21} />
+            </span>
             ticket<span className="-ml-3 text-orange-400">mania</span>
           </Link>
           <div className="relative">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-orange-300">Seu próximo momento</p>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-orange-300">
+              Seu próximo momento
+            </p>
             <h1 className="mt-4 text-4xl font-black leading-tight">
-              {isLogin ? "Entre. A experiência espera por você." : "Crie sua conta e viva mais."}
+              {isLogin
+                ? "Entre. A experiência espera por você."
+                : "Crie sua conta e viva mais."}
             </h1>
             <p className="mt-4 leading-7 text-slate-300">
-              Encontre eventos, organize seus pedidos e tenha seus ingressos sempre à mão.
+              Encontre eventos, organize seus pedidos e tenha seus ingressos
+              sempre à mão.
             </p>
           </div>
-          <p className="relative text-xs text-slate-400">Seus dados de acesso ficam protegidos.</p>
+          <p className="relative text-xs text-slate-400">
+            Seus dados de acesso ficam protegidos.
+          </p>
         </div>
 
         <div className="p-6 sm:p-10 lg:p-14">
-          <div className="mb-8 flex items-center gap-2 text-orange-600 md:hidden"><Ticket size={20} /><span className="font-extrabold">ticketmania</span></div>
-          <span className="grid size-12 place-items-center rounded-2xl bg-orange-50 text-orange-600"><KeyRound size={22} /></span>
+          <div className="mb-8 flex items-center gap-2 text-orange-600 md:hidden">
+            <Ticket size={20} />
+            <span className="font-extrabold">ticketmania</span>
+          </div>
+          <span className="grid size-12 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+            <KeyRound size={22} />
+          </span>
           <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950">
             {isLogin ? "Bem-vindo de volta" : "Criar sua conta"}
           </h2>
           <p className="mt-2 text-sm text-slate-500">
-            {isLogin ? "Acesse seus pedidos e continue de onde parou." : "Preencha seus dados para começar."}
+            {isLogin
+              ? "Acesse seus pedidos e continue de onde parou."
+              : "Preencha seus dados para começar."}
           </p>
 
-          {error ? <div className="mt-6"><Notice>{error}</Notice></div> : null}
-          {success ? <div className="mt-6"><Notice variant="success">{success}</Notice></div> : null}
+          {error ? (
+            <div className="mt-6">
+              <Notice>{error}</Notice>
+            </div>
+          ) : null}
+          {success ? (
+            <div className="mt-6">
+              <Notice variant="success">{success}</Notice>
+            </div>
+          ) : null}
 
           {isLogin ? (
-            <form className="mt-7 space-y-5" onSubmit={loginForm.handleSubmit(submit)}>
-              <Field label="E-mail" error={loginForm.formState.errors.email?.message}>
-                <Input type="email" autoComplete="email" placeholder="voce@email.com" {...loginForm.register("email")} />
+            <form
+              className="mt-7 space-y-5"
+              onSubmit={loginForm.handleSubmit(submit)}
+            >
+              <Field
+                label="E-mail"
+                error={loginForm.formState.errors.email?.message}
+              >
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="voce@email.com"
+                  {...loginForm.register("email")}
+                />
               </Field>
-              <Field label="Senha" error={loginForm.formState.errors.password?.message}>
-                <Input type="password" autoComplete="current-password" placeholder="Sua senha" {...loginForm.register("password")} />
+              <Field
+                label="Senha"
+                error={loginForm.formState.errors.password?.message}
+              >
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Sua senha"
+                  {...loginForm.register("password")}
+                />
               </Field>
-              <Button type="submit" className="w-full rounded-xl" disabled={busy}>
+              <Button
+                type="submit"
+                className="w-full rounded-xl"
+                disabled={busy}
+              >
                 {busy ? "Entrando..." : "Entrar"} <ArrowRight size={17} />
               </Button>
             </form>
           ) : (
-            <form className="mt-7 space-y-5" onSubmit={registerForm.handleSubmit(submit)}>
-              <Field label="Nome" error={registerForm.formState.errors.name?.message}>
-                <Input autoComplete="name" placeholder="Seu nome completo" {...registerForm.register("name")} />
+            <form
+              className="mt-7 space-y-5"
+              onSubmit={registerForm.handleSubmit(submit)}
+            >
+              <Field
+                label="Nome"
+                error={registerForm.formState.errors.name?.message}
+              >
+                <Input
+                  autoComplete="name"
+                  placeholder="Seu nome completo"
+                  {...registerForm.register("name")}
+                />
               </Field>
-              <Field label="E-mail" error={registerForm.formState.errors.email?.message}>
-                <Input type="email" autoComplete="email" placeholder="voce@email.com" {...registerForm.register("email")} />
+              <Field
+                label="E-mail"
+                error={registerForm.formState.errors.email?.message}
+              >
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="voce@email.com"
+                  {...registerForm.register("email")}
+                />
               </Field>
-              <Field label="Senha" error={registerForm.formState.errors.password?.message}>
-                <Input type="password" autoComplete="new-password" placeholder="Crie uma senha" {...registerForm.register("password")} />
+              <Field
+                label="Senha"
+                error={registerForm.formState.errors.password?.message}
+              >
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="Crie uma senha"
+                  {...registerForm.register("password")}
+                />
               </Field>
-              <Button type="submit" className="w-full rounded-xl" disabled={busy}>
-                {busy ? "Criando conta..." : "Criar conta"} <ArrowRight size={17} />
+              <Button
+                type="submit"
+                className="w-full rounded-xl"
+                disabled={busy}
+              >
+                {busy ? "Criando conta..." : "Criar conta"}{" "}
+                <ArrowRight size={17} />
               </Button>
             </form>
           )}
 
           <p className="mt-7 text-center text-sm text-slate-600">
             {isLogin ? "Ainda não tem uma conta?" : "Já tem uma conta?"}{" "}
-            <Link className="font-bold text-orange-600 hover:text-orange-700" href={isLogin ? "/register" : "/login"}>
+            <Link
+              className="font-bold text-orange-600 hover:text-orange-700"
+              href={isLogin ? "/register" : "/login"}
+            >
               {isLogin ? "Cadastre-se" : "Entrar"}
             </Link>
           </p>

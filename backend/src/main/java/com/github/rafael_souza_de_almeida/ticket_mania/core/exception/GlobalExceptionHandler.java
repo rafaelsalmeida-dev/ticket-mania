@@ -7,6 +7,7 @@ import com.github.rafael_souza_de_almeida.ticket_mania.user.exception.UserAlread
 import com.github.rafael_souza_de_almeida.ticket_mania.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -78,6 +79,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> orderNotFoundException(OrderNotFoundException ex) {
         HttpStatus status = HttpStatus.CONFLICT;
+
+        ErrorResponseDto errorResponse = new ErrorResponseDto(
+                status.value(),
+                status.getReasonPhrase(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponseDto> handleAuthenticationException(AuthenticationException ex) {
+
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
 
         ErrorResponseDto errorResponse = new ErrorResponseDto(
                 status.value(),
